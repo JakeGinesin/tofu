@@ -1,0 +1,76 @@
+t1-reorder:
+  - command: python src/main.py --model=tests/reorder/t1-reorder.pml --attacker=reorder --chan=c --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: the reorder attacker gadget shouldn't be able to violate the claim, as it doesn't have enough mem
+
+t1-reorder-more-mem:
+  - command: python src/main.py --model=tests/reorder/t1-reorder.pml --attacker=reorder --chan=c --output=temp.pml --eval --cleanup --mem=2
+  - intended: property violation
+  - explanation: the reorder attacker now has enough mem
+
+t2-reorder:
+  - command: python src/main.py --model=tests/reorder/t2-reorder.pml --attacker=reorder --chan=c --output=temp.pml --eval --cleanup --mem=3
+  - intended: property violation
+  - explanation: rearrange attacker has enough mem to do the reorder attack
+
+t3-reorder:
+  - command: python src/main.py --model=tests/reorder/t3-reorder.pml --attacker=reorder --chan=c --output=temp.pml --eval --cleanup --mem=2
+  - intended: no violation
+  - explanation: rearrange attacker does not have enough mem
+
+t4-reorder:
+  - command: python src/main.py --model=tests/reorder/t4-reorder.pml --attacker=reorder --chan=c --output=temp.pml --eval --cleanup --mem=2
+  - intended: no violation
+  - explanation: rearrange attacker does not have enough mem
+
+t1-drop:
+  - command: python3 src/main.py --model=tests/drop/t1-drop.pml --attacker=drop --chan=c --output=temp.pml --mem=1 --eval --cleanup
+  - intended: acceptance cycle
+  - explanation: drop attacker is able to remove the single message on the channel, preventing the eventually LTL property from ever satisfying
+
+t2-drop:
+  - command: python3 src/main.py --model=tests/drop/t2-drop.pml --attacker=drop --chan=c --output=temp.pml --mem=1 --eval --cleanup
+  - intended: no violation
+  - explanation: drop attacker is not able to remove both the messages on the channel, so the LTL property remains satisfying
+
+t3-drop:
+  - command: python3 src/main.py --model=tests/drop/t3-drop.pml --attacker=drop --chan=c --output=temp.pml --mem=2 --eval --cleanup
+  - intended: acceptance cycle
+  - explanation: attacker should drop both messages
+
+t4-drop:
+  - command: python3 src/main.py --model=tests/drop/t4-drop.pml --attacker=drop --chan=c --output=temp.pml --mem=1 --eval --cleanup
+  - intended: acceptance cycle
+  - explanation: drop attacker should be able to find the attack in the middle of the chan
+
+t5-drop-multi:
+  - command: python3 src/main.py --model=tests/drop/t5-drop-multi.pml --attacker=drop --chan=c --output=temp.pml --mem=5 --eval --cleanup
+  - intended: acceptance cycle
+  - explanation: attacker can drop all five messages
+
+t6-drop-overwhelm:
+  - command: python3 src/main.py --model=tests/drop/t6-drop-overwhelm.pml --attacker=drop --chan=c --output=temp.pml --mem=4 --eval --cleanup
+  - intended: no violation
+  - explanation: attacker can't drop all five messages
+  
+t1-replay:
+  - command: python src/main.py --model=tests/replay/t1-replay.pml --attacker=replay --chan=c --output=temp.pml --eval --cleanup --mem=1
+  - intended: property violation
+  - explanation: since the attacker is able to replay "5" on c, they can progress the consume proctype from PROC1, then PROC2
+
+t2-replay:
+  - command: python src/main.py --model=tests/replay/t2-replay.pml --attacker=replay --chan=c --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: the attacker must eventually replay the packet onto the channel
+
+3-jump: 
+  - command: python src/main.py --model=tests/replay/3-jump.pml --attacker=replay --chan=c --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: can only replay the packet once
+
+replay-out-of-order:
+  - command: python src/main.py --model=tests/replay/replay-out-of-order.pml --attacker=replay --chan=c --output=temp.pml --eval --cleanup --mem=2
+  - intended: property violation
+  - explanation: replay, but in a different order than received
+
+
