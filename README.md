@@ -2,10 +2,11 @@
 
 # TODO:
 - [x] fix weird spin errors(?)
-- [ ] add attackers that only do specifically n queries
+- [x] add attackers that only do specifically n queries
     - limitation: you cannot choose only *n* queries for the dropping attacker
-- [ ] add attackers to do <= n queries
+- [x] add attackers to do <= n queries
 - [x] add a test suite
+- [ ] make the impl more robust; do more SWE
 - [ ] modify the paper? spin workshop?
 - [x] nix flake here lol
 
