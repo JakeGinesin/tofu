@@ -1,3 +1,18 @@
+drop-nodeadlock: 
+  - command: python src/main.py --model=tests/no-deadlocks/t1-deadlock.pml --attacker=drop --chan=c --output=temp.pml --eval --cleanup --mem=2
+  - intended: no violation
+  - explanation: drop gadget does not deadlock
+
+replay-nodeadlock: 
+  - command: python src/main.py --model=tests/no-deadlocks/t1-deadlock.pml --attacker=replay --chan=c --output=temp.pml --eval --cleanup --mem=2
+  - intended: no violation
+  - explanation: replay gadget does not deadlock
+
+reorder-nodeadlock: 
+  - command: python src/main.py --model=tests/no-deadlocks/t1-deadlock.pml --attacker=reorder --chan=c --output=temp.pml --eval --cleanup --mem=2
+  - intended: no violation
+  - explanation: reorder gadget does not deadlock
+
 t1-reorder:
   - command: python src/main.py --model=tests/reorder/t1-reorder.pml --attacker=reorder --chan=c --output=temp.pml --eval --cleanup --mem=1
   - intended: no violation
@@ -65,12 +80,22 @@ t2-replay:
 
 3-jump: 
   - command: python src/main.py --model=tests/replay/3-jump.pml --attacker=replay --chan=c --output=temp.pml --eval --cleanup --mem=1
-  - intended: no violation
-  - explanation: can only replay the packet once
+  - intended: property violation
+  - explanation: can replay the same packet multiple times
 
 replay-out-of-order:
   - command: python src/main.py --model=tests/replay/replay-out-of-order.pml --attacker=replay --chan=c --output=temp.pml --eval --cleanup --mem=2
   - intended: property violation
   - explanation: replay, but in a different order than received
+
+weave: 
+  - command: python src/main.py --model=tests/replay/weave.pml --attacker=replay --chan=c --output=temp.pml --eval --cleanup --mem=2
+  - intended: property violation
+  - explanation: consume-replay-consume-replay pattern is able to be found
+
+weave-lessmem: 
+  - command: python src/main.py --model=tests/replay/weave.pml --attacker=replay --chan=c --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: second consume cannot be completed, as we run out of consumption budget; however, we do have enough memory room for this
 
 
