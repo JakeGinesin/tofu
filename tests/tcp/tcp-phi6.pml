@@ -4,9 +4,9 @@
 mtype = { SYN, FIN, ACK, ABORT, CLOSE, RST, OPEN }
 
 chan AtoN = [1] of { mtype };
-chan NtoA = [0] of { mtype };
+chan NtoA = [1] of { mtype };
 chan BtoN = [1] of { mtype };
-chan NtoB = [0] of { mtype };
+chan NtoB = [1] of { mtype };
 
 int state[2];
 int pids[2];
