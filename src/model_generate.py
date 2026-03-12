@@ -283,7 +283,6 @@ def gen_replay_unbounded(chan : str, chan_type : List[str], mem : int, index : i
 
     #  return ret_string
 
-
 def gen_reorder(chan : str, chan_type : List[str], mem : int, index : int) -> str:
     ret_string = ""
 
