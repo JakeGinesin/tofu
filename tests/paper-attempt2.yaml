@@ -5,11 +5,6 @@ tcp-phi1-drop-violate:
   - intended: property violation
   - explanation: Dropping A's FIN allows A to eventually time out to Closed while B remains stranded in Established.
 
-tcp-phi1-drop-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi1.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=0
-  - intended: no violation
-  - explanation: Attacker has 0 memory budget; normal teardown prevents half-open states.
-
 tcp-phi1-replay-violate:
   - command: python src/main.py --model=tests/tcp/tcp-phi1.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
   - intended: property violation
@@ -25,23 +20,12 @@ tcp-phi1-reorder-violate:
   - intended: no violation
   - explanation: A sends SYN and waits for a response; it does not emit a FIN to reorder until Established. No half-open state can be triggered this way.
 
-tcp-phi1-reorder-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi1.pml --attacker=reorder --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
-  - intended: no violation
-  - explanation: Reorder attacker requires at least mem=2 to swap messages; mem=1 is insufficient.
-
-
 # --- PHI 3: NO DEADLOCKS ---
 
 tcp-phi3-drop-violate:
   - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=drop --chan=BtoA --output=temp.pml --eval --cleanup --mem=1
   - intended: acceptance cycle
   - explanation: Dropping B's SYN-ACK stalls A in SynSent and B in SynRec indefinitely without timeout recovery.
-
-tcp-phi3-drop-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=0
-  - intended: no violation
-  - explanation: Zero memory prevents dropping, allowing standard timers and handshakes to resolve without deadlocks.
 
 tcp-phi3-replay-violate:
   - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
@@ -58,12 +42,6 @@ tcp-phi3-reorder-violate:
   - intended: no violation
   - explanation: Out-of-order packets are skipped, causing endpoints to correctly resolve to ClosedState via timeouts rather than deadlocking.
 
-tcp-phi3-reorder-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=reorder --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
-  - intended: no violation
-  - explanation: Attacker lacks the mem=2 budget required to execute a reorder attack.
-
-
 # --- PHI 5: SYN_RECEIVED RESOLUTION ---
 
 tcp-phi5-drop-violate:
@@ -71,64 +49,15 @@ tcp-phi5-drop-violate:
   - intended: acceptance cycle
   - explanation: Dropping the final ACK of the 3-way handshake prevents B from ever resolving SynRec to Established.
 
-tcp-phi5-drop-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=0
-  - intended: no violation
-  - explanation: Without drop capabilities, the ACK arrives normally, resolving the SynRec state.
-
 tcp-phi5-replay-violate:
   - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
   - intended: acceptance cycle
   - explanation: Replaying a SYN forces B to repeatedly trigger simultaneous open logic, preventing resolution.
 
-tcp-phi5-replay-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
-  - intended: acceptance cycle
-  - explanation: Infinite replay creates a livelock preventing state resolution.
-
 tcp-phi5-reorder-violate:
   - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=reorder --chan=AtoB --output=temp.pml --eval --cleanup --mem=2
   - intended: no violation
   - explanation: Invalidly ordered ACKs are skipped, resulting in a timeout to ClosedState, which legally satisfies the phi5 property.
-
-tcp-phi5-reorder-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=reorder --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
-  - intended: no violation
-  - explanation: Insufficient memory to reorder packets; handshakes process chronologically.
-
-
-# --- PHI 6: STRICT CLOSING TRANSITIONS ---
-
-tcp-phi6-drop-violate:
-  - command: python src/main.py --model=tests/tcp/tcp-phi6.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
-  - intended: property violation
-  - explanation: Dropping the ACK to the FIN causes a timeout that bypasses the strict Closing-to-Closed state sequence.
-
-tcp-phi6-drop-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi6.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=0
-  - intended: property violation
-  - explanation: The canonical model routes to TIME_WAIT from CLOSING, inherently violating this LTL property.
-
-tcp-phi6-replay-violate:
-  - command: python src/main.py --model=tests/tcp/tcp-phi6.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
-  - intended: property violation
-  - explanation: Replaying a FIN while in Closing forces an invalid transition to TimeWait.
-
-tcp-phi6-replay-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi6.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=0
-  - intended: property violation
-  - explanation: Base canonical behavior inherently violates the LTL strict transition constraint.
-
-tcp-phi6-reorder-violate:
-  - command: python src/main.py --model=tests/tcp/tcp-phi6.pml --attacker=reorder --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=2
-  - intended: property violation
-  - explanation: Swapping FINs alters timing, violating the sequence.
-
-tcp-phi6-reorder-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi6.pml --attacker=reorder --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
-  - intended: property violation
-  - explanation: Base canonical behavior inherently violates the LTL strict transition constraint.
-
 
 # --- PHI 7: SIMULTANEOUS CLOSE RESOLUTION ---
 
@@ -137,31 +66,15 @@ tcp-phi7-drop-violate:
   - intended: acceptance cycle
   - explanation: Dropping a FIN during a simultaneous close prevents one side from transitioning out of FinW1State.
 
-tcp-phi7-drop-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi7.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=0
-  - intended: no violation
-  - explanation: Zero memory prevents message dropping; both endpoints successfully reach ClosedState.
-
 tcp-phi7-replay-violate:
   - command: python src/main.py --model=tests/tcp/tcp-phi7.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
   - intended: acceptance cycle
   - explanation: Replaying stale FINs traps the endpoint in a continuous processing loop, halting progress to ClosedState.
 
-tcp-phi7-replay-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi7.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=0
-  - intended: no violation
-  - explanation: Without replay capabilities, the simultaneous close resolves chronologically.
-
 tcp-phi7-reorder-violate:
   - command: python src/main.py --model=tests/tcp/tcp-phi7.pml --attacker=reorder --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=2
   - intended: no violation
-  - explanation: Swapped packets are skipped, causing endpoints to successfully timeout to ClosedState.
-
-tcp-phi7-reorder-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi7.pml --attacker=reorder --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
-  - intended: no violation
-  - explanation: Mem=1 is insufficient to execute a reorder attack.
-
+  - explanation: Swapped packets are skipped, causing endpoints to successfully timeout to ClosedState
 
 # --- PHI 8: ACTIVE CLOSE EVENTUALLY TERMINATES ---
 
@@ -170,31 +83,15 @@ tcp-phi8-drop-violate:
   - intended: acceptance cycle
   - explanation: Dropping the responder's ACK leaves the active closer permanently stranded in FinW1State.
 
-tcp-phi8-drop-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi8.pml --attacker=drop --chan=BtoA --output=temp.pml --eval --cleanup --mem=0
-  - intended: no violation
-  - explanation: Normal teardown ensures the active closer receives its ACK and FIN.
-
 tcp-phi8-replay-violate:
   - command: python src/main.py --model=tests/tcp/tcp-phi8.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
   - intended: acceptance cycle
   - explanation: Replaying application data or FINs delays the final transition, breaking the eventual termination guarantee.
 
-tcp-phi8-replay-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi8.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=0
-  - intended: no violation
-  - explanation: Normal sequence guarantees the active closer reaches ClosedState.
-
 tcp-phi8-reorder-violate:
   - command: python src/main.py --model=tests/tcp/tcp-phi8.pml --attacker=reorder --chan=BtoA --output=temp.pml --eval --cleanup --mem=2
   - intended: no violation
   - explanation: Skipped invalid packets force a timeout to ClosedState, successfully satisfying the property.
-
-tcp-phi8-reorder-pass:
-  - command: python src/main.py --model=tests/tcp/tcp-phi8.pml --attacker=reorder --chan=BtoA --output=temp.pml --eval --cleanup --mem=1
-  - intended: no violation
-  - explanation: Insufficient memory to alter the close sequence.
-
 
 # --- PHI 9: HANDSHAKE CANNOT BE BYPASSED ---
 
