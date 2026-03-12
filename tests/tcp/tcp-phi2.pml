@@ -3,10 +3,10 @@
 // not yet implemented: phi6
 mtype = { SYN, FIN, ACK, ABORT, CLOSE, RST, OPEN }
 
-chan AtoN = [1] of { mtype };
-chan NtoA = [1] of { mtype };
-chan BtoN = [1] of { mtype };
-chan NtoB = [1] of { mtype };
+chan AtoN = [2] of { mtype };
+chan NtoA = [2] of { mtype };
+chan BtoN = [2] of { mtype };
+chan NtoB = [2] of { mtype };
 
 int state[2];
 int pids[2];
