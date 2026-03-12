@@ -138,14 +138,12 @@ init {
     }
 }
 
-/* liveness: simultanous open */ 
-ltl phi4 {
-	always (
-		(state[0] == SynSentState && 
-		 state[1] == SynSentState)
-		
-		implies
-			
-			((eventually state[0] == EstState) &&
-		     (eventually state[1] == EstState)))
+/* liveness: simultaneous close resolution */
+ltl phi7 {
+    always (
+        (state[0] == FinW1State && state[1] == FinW1State)
+        implies 
+            (eventually (state[0] == ClosedState) && 
+             eventually (state[1] == ClosedState))
+    )
 }
