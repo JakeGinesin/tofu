@@ -33,13 +33,13 @@ tcp-phi1-drop-bidirectional:
 
 tcp-phi1-replay-AtoB:
   - command: python src/main.py --model=tests/tcp/tcp-phi1.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
-  - intended: no violation
-  - explanation: replaying A's messages cannot create half-open; B reaching Established still requires valid handshake, and A cannot close without teardown
+  - intended: property violation
+  - explanation: replay attacker copies A's message non-destructively, allowing normal handshake and teardown; after A returns to Closed, the replayed stale message drives B through a new handshake into Established, creating a half-open state
 
 tcp-phi1-replay-bidirectional:
   - command: python src/main.py --model=tests/tcp/tcp-phi1.pml --attacker=replay --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=1
-  - intended: no violation
-  - explanation: replay on both channels still cannot violate the structural invariant; A must pass through Established before reaching Closed
+  - intended: property violation
+  - explanation: replay on both channels injects stale handshake messages in both directions; after A tears down to Closed, replayed messages push B into Established without A's participation
 
 tcp-phi1-reorder-bidirectional:
   - command: python src/main.py --model=tests/tcp/tcp-phi1.pml --attacker=reorder --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=2
@@ -50,6 +50,11 @@ tcp-phi1-reorder-bidirectional:
 # neither side stuck forever in a non-terminal state
 # Expected: drop on both channels can strand both sides post-Established
 # (e.g., both in FinWait1 after FINs are dropped)
+
+tcp-phi3-drop-AtoB-nodeadlock:
+  - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=0
+  - intended: no violation
+  - explanation: with mem=0 the drop attacker cannot consume any messages; it goes straight to BREAK, leaving the model unmodified; timeout transitions prevent permanent stalls in the base model
 
 tcp-phi3-drop-AtoB:
   - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
@@ -74,6 +79,12 @@ tcp-phi3-reorder-bidirectional:
 # phi5: liveness - SYN_RECEIVED resolution
 # SynReceived implies eventually (Established or FinWait1 or Closed)
 # Expected: drop on AtoB traps A in SynReceived (no timeout modeled)
+
+
+tcp-phi5-replay-BtoA:
+  - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=replay --chan=BtoA --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: replaying B's messages on BtoA delivers extra SYNs to A; if A enters SynReceived, the replayed messages do not prevent ACK delivery on AtoB (which is unattacked), so SynReceived resolves normally
 
 tcp-phi5-drop-AtoB:
   - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
