@@ -1,0 +1,122 @@
+unidirectional-drop-abp: 
+  - command: python src/main.py --model=tests/abp/abp.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: abp resists drop, see https://en.wikipedia.org/wiki/Alternating_bit_protocol
+
+bidirectional-drop-abp: 
+  - command: python src/main.py --model=tests/abp/abp.pml --attacker=drop --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: abp resists drop, see https://en.wikipedia.org/wiki/Alternating_bit_protocol
+
+# =============================================================================
+# TCP - shared channel model (AtoB, BtoA)
+#
+# A sends on AtoB, B reads AtoB. B sends on BtoA, A reads BtoA.
+# Korg attackers directly interpose on the shared channel.
+# =============================================================================
+
+# phi1: safety - half-open prevention
+# always (leftClosed implies !rightEstablished)
+# Expected: holds. B reaching Established requires A's ACK, which means
+# A was also in Established. A cannot reach Closed from Established
+# without a full teardown that also moves B out of Established.
+
+tcp-phi1-drop-AtoB:
+  - command: python src/main.py --model=tests/tcp/tcp-phi1.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: dropping A's messages prevents B from reaching Established; no half-open possible
+
+tcp-phi1-drop-bidirectional:
+  - command: python src/main.py --model=tests/tcp/tcp-phi1.pml --attacker=drop --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: dropping on both channels prevents any handshake completion; neither side reaches Established
+
+tcp-phi1-replay-AtoB:
+  - command: python src/main.py --model=tests/tcp/tcp-phi1.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: replaying A's messages cannot create half-open; B reaching Established still requires valid handshake, and A cannot close without teardown
+
+tcp-phi1-replay-bidirectional:
+  - command: python src/main.py --model=tests/tcp/tcp-phi1.pml --attacker=replay --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: replay on both channels still cannot violate the structural invariant; A must pass through Established before reaching Closed
+
+tcp-phi1-reorder-bidirectional:
+  - command: python src/main.py --model=tests/tcp/tcp-phi1.pml --attacker=reorder --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=2
+  - intended: no violation
+  - explanation: reordering cannot bypass the handshake dependency; half-open prevention holds structurally
+
+# phi3: liveness - no infinite stalls/deadlocks
+# neither side stuck forever in a non-terminal state
+# Expected: drop on both channels can strand both sides post-Established
+# (e.g., both in FinWait1 after FINs are dropped)
+
+tcp-phi3-drop-AtoB:
+  - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
+  - intended: acceptance cycle
+  - explanation: handshake completes via nondeterministic pass; then attacker drops A's FIN, stranding both sides in post-Established states with no timeout recovery
+
+tcp-phi3-drop-bidirectional:
+  - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=drop --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=1
+  - intended: acceptance cycle
+  - explanation: attackers let handshake through, then drop FINs on both channels; both sides stuck in FinWait1 or similar permanently
+
+tcp-phi3-replay-AtoB:
+  - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
+  - intended: acceptance cycle
+  - explanation: replay attacker can consume A's FIN and never replay it, effectively dropping it; B stays in Established, A stuck in FinWait1
+
+tcp-phi3-reorder-bidirectional:
+  - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=reorder --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=2
+  - intended: acceptance cycle
+  - explanation: reorder attacker consumes teardown messages and delays them indefinitely, stranding both sides
+
+# phi5: liveness - SYN_RECEIVED resolution
+# SynReceived implies eventually (Established or FinWait1 or Closed)
+# Expected: drop on AtoB traps A in SynReceived (no timeout modeled)
+
+tcp-phi5-drop-AtoB:
+  - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
+  - intended: acceptance cycle
+  - explanation: A goes to Listen, B's SYN arrives via BtoA, A enters SynReceived and sends SYN+ACK on AtoB; attacker drops it; B never completes handshake, A stuck in SynReceived permanently (no timeout in model)
+
+tcp-phi5-drop-BtoA:
+  - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=drop --chan=BtoA --output=temp.pml --eval --cleanup --mem=1
+  - intended: acceptance cycle
+  - explanation: B sends SYN on BtoA, attacker drops it; but A can also initiate — if A goes Listen and B goes SynSent, A needs B's SYN which is dropped; however A can enter SynReceived via simultaneous open path and get stuck
+
+tcp-phi5-drop-bidirectional:
+  - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=drop --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=1
+  - intended: acceptance cycle
+  - explanation: dropping on both channels after SynReceived is entered prevents any ACK from arriving to resolve it
+
+tcp-phi5-replay-AtoB:
+  - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
+  - intended: acceptance cycle
+  - explanation: replay attacker consumes A's SYN+ACK and never replays it (terminates with empty mem), effectively a drop; A stuck in SynReceived
+
+tcp-phi5-reorder-AtoB:
+  - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=reorder --chan=AtoB --output=temp.pml --eval --cleanup --mem=2
+  - intended: acceptance cycle
+  - explanation: reorder attacker consumes A's SYN+ACK during the handshake; even if replayed later, the ordering disruption can prevent SynReceived resolution
+
+# phi6: safety - strict closing transitions
+# Closing implies next(Closing or Closed)
+# Expected: violated even without attacker. Closing transitions to
+# TimeWait on ACK (not Closed), and TimeWaitState is neither
+# ClosingState nor ClosedState.
+
+tcp-phi6-drop-AtoB:
+  - command: python src/main.py --model=tests/tcp/tcp-phi6.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
+  - intended: property violation
+  - explanation: base model already violates phi6; simultaneous close leads to Closing, then ACK transitions to TimeWait which is not Closing or Closed; attacker goes to BREAK, preserving the pre-existing violation
+
+tcp-phi6-replay-AtoB:
+  - command: python src/main.py --model=tests/tcp/tcp-phi6.pml --attacker=replay --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
+  - intended: property violation
+  - explanation: same base-model violation; Closing -> TimeWait is always reachable once simultaneous close occurs
+
+tcp-phi6-reorder-bidirectional:
+  - command: python src/main.py --model=tests/tcp/tcp-phi6.pml --attacker=reorder --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=2
+  - intended: property violation
+  - explanation: same base-model violation; attacker presence does not affect the Closing -> TimeWait transition path

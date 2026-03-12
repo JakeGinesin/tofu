@@ -1,7 +1,12 @@
+// models: phi1, phi2, phi3, phi5
+// does not model: phi4, phi7
+// not yet implemented: phi6
 mtype = { SYN, FIN, ACK, ABORT, CLOSE, RST, OPEN }
 
-chan AtoB = [2] of { mtype };
-chan BtoA = [2] of { mtype };
+chan AtoN = [2] of { mtype };
+chan NtoA = [2] of { mtype };
+chan BtoN = [2] of { mtype };
+chan NtoB = [2] of { mtype };
 
 int state[2];
 int pids[2];
@@ -75,6 +80,7 @@ SYN_RECEIVED:
   :: rcv ? ACK -> goto ESTABLISHED;
   :: rcv ? _ -> skip;
   od
+	/* We may want to consider putting a timeout -> CLOSED here. */
 ESTABLISHED:
 	state[i] = EstState;
   do 
@@ -133,6 +139,20 @@ end:
 init {
 	state[0] = ClosedState;
 	state[1] = ClosedState;
-	run TCP(AtoB, BtoA, 0);
-	run TCP(BtoA, AtoB, 1);
+	run TCP(AtoN, NtoA, 0);
+	run TCP(BtoN, NtoB, 1);
+}
+
+/* liveness: SYN_RECEIVED resolution*/ 
+ltl phi5 {
+	always (
+		(state[0] == SynRecState)
+			implies (
+				eventually (
+					(state[0] == EstState   || 
+					 state[0] == FinW1State ||
+					 state[0] == ClosedState)
+				)
+			)
+		)
 }
