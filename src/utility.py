@@ -27,7 +27,6 @@ def parse_channels(model : str) -> dict():
             data = re.search(r"\#define\s*([A-Za-z\_\-]+)\s*([0-9])", line)
             if data is None : continue
             if not data.group(1) or not data.group(2) : continue
-            print(data)
             define_mapping[data.group(1)] = int(data.group(2))
         if line.startswith("chan"):
             # parsing regular channels
