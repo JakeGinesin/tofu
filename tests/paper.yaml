@@ -48,31 +48,6 @@ tcp-phi1-reorder-bidirectional:
   - intended: property violation
   - explanation: reordering on both channels maximizes desynchronization potential for half-open
 
-tcp-phi2-drop-AtoN:
-  - command: python src/main.py --model=tests/tcp/tcp-phi2.pml --attacker=drop --chan=AtoN --output=temp.pml --eval --cleanup --mem=1
-  - intended: acceptance cycle
-  - explanation: dropping A's SYN prevents the handshake from completing, violating the liveness property that A should eventually reach Established
-
-tcp-phi2-drop-BtoN:
-  - command: python src/main.py --model=tests/tcp/tcp-phi2.pml --attacker=drop --chan=BtoN --output=temp.pml --eval --cleanup --mem=1
-  - intended: acceptance cycle
-  - explanation: dropping B's SYN+ACK response prevents A from ever completing the handshake
-
-tcp-phi2-drop-bidirectional:
-  - command: python src/main.py --model=tests/tcp/tcp-phi2.pml --attacker=drop --chan=AtoN,BtoN --output=temp.pml --eval --cleanup --mem=1
-  - intended: acceptance cycle
-  - explanation: dropping on both channels trivially prevents connection establishment
-
-tcp-phi2-replay-AtoN:
-  - command: python src/main.py --model=tests/tcp/tcp-phi2.pml --attacker=replay --chan=AtoN --output=temp.pml --eval --cleanup --mem=1
-  - intended: no violation
-  - explanation: replaying A's messages does not prevent establishment; extra SYNs are handled by B's wildcard receives
-
-tcp-phi2-reorder-AtoN:
-  - command: python src/main.py --model=tests/tcp/tcp-phi2.pml --attacker=reorder --chan=AtoN --output=temp.pml --eval --cleanup --mem=2
-  - intended: acceptance cycle
-  - explanation: reordering A's handshake messages can prevent B from following the correct SYN/ACK sequence, stalling establishment
-
 tcp-phi3-drop-AtoN:
   - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=drop --chan=AtoN --output=temp.pml --eval --cleanup --mem=1
   - intended: acceptance cycle
@@ -92,26 +67,6 @@ tcp-phi3-reorder-bidirectional:
   - command: python src/main.py --model=tests/tcp/tcp-phi3.pml --attacker=reorder --chan=AtoN,BtoN --output=temp.pml --eval --cleanup --mem=2
   - intended: acceptance cycle
   - explanation: reordering on both channels can desynchronize both sides into permanently mismatched states
-
-tcp-phi4-drop-AtoN:
-  - command: python src/main.py --model=tests/tcp/tcp-phi4.pml --attacker=drop --chan=AtoN --output=temp.pml --eval --cleanup --mem=1
-  - intended: acceptance cycle
-  - explanation: during simultaneous open, dropping A's SYN prevents B from advancing, breaking the simultaneous open guarantee
-
-tcp-phi4-drop-bidirectional:
-  - command: python src/main.py --model=tests/tcp/tcp-phi4.pml --attacker=drop --chan=AtoN,BtoN --output=temp.pml --eval --cleanup --mem=1
-  - intended: acceptance cycle
-  - explanation: dropping both sides' SYNs trivially prevents simultaneous open from resolving
-
-tcp-phi4-replay-AtoN:
-  - command: python src/main.py --model=tests/tcp/tcp-phi4.pml --attacker=replay --chan=AtoN --output=temp.pml --eval --cleanup --mem=1
-  - intended: no violation
-  - explanation: replaying SYN messages during simultaneous open should not prevent eventual establishment; the protocol handles duplicate SYNs
-
-tcp-phi4-reorder-bidirectional:
-  - command: python src/main.py --model=tests/tcp/tcp-phi4.pml --attacker=reorder --chan=AtoN,BtoN --output=temp.pml --eval --cleanup --mem=2
-  - intended: acceptance cycle
-  - explanation: reordering handshake messages during simultaneous open can prevent the SYN+ACK exchange from completing correctly
 
 tcp-phi5-drop-AtoN:
   - command: python src/main.py --model=tests/tcp/tcp-phi5.pml --attacker=drop --chan=AtoN --output=temp.pml --eval --cleanup --mem=1

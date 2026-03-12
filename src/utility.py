@@ -25,12 +25,17 @@ def parse_channels(model : str) -> dict():
     for line in model:
         if line.startswith("#define"):
             data = re.search(r"\#define\s*([A-Za-z\_\-]+)\s*([0-9])", line)
+            if data is None : continue
+            if not data.group(1) or not data.group(2) : continue
+            print(data)
             define_mapping[data.group(1)] = int(data.group(2))
         if line.startswith("chan"):
             # parsing regular channels
             data = re.search(r"chan\s*([a-zA-Z\_\-]+).*\{(.+)\}", line)
             # note, we don't have to think very hard about parsing Promela types.
             # this is because mtype:whatever, mtype, and generic types are interchangable in Promela grammar
+            if data is None : continue
+            if not data.group(1) or not data.group(2) : continue
             name, ctype = data.group(1), data.group(2).replace(" ","").split(",")
             channels[name] = list(tuple(ctype))
 
@@ -47,7 +52,7 @@ def parse_channels(model : str) -> dict():
             #  channels[m_name] = (m_cvalue, m_ctype)
 
         else : continue
-    # print(channels)
+
     return channels
 
 def parse_mchannels(model : str) -> (dict(), dict()):
@@ -57,11 +62,17 @@ def parse_mchannels(model : str) -> (dict(), dict()):
     for line in model:
         if line.startswith("#define"):
             data = re.search(r"\#define\s*([A-Za-z\_\-]+)\s*([0-9])", line)
+            if data is None : continue
+            if not data.group(1) or not data.group(2) : continue
             define_mapping[data.group(1)] = int(data.group(2))
             # print(define_mapping)
         if line.startswith("chan"):
             # parsing multichannels
             data_multichan = re.search(r"chan\s*([A-Za-z\_\-0-9]+)\[([A-Za-z0-9\_\-]+)\].*\{(.+)\}", line)
+
+            if data_multichan is None:
+                continue
+
             if data_multichan:
                 m_name, m_cvalue, m_ctype = data_multichan.group(1), data_multichan.group(2), data_multichan.group(3).replace(" ","").split(",")
             else : continue
@@ -78,7 +89,6 @@ def parse_mchannels(model : str) -> (dict(), dict()):
 
 
         else : continue
-    # print(channels)
 
     return channels, channel_lens
 
@@ -110,14 +120,6 @@ def eval_model(model_path : str) -> None:
             out+=output
             print(output, end='')
 
-    # No need to decode since output is already a string
-    #  stdout, stderr = proc.communicate()
-
-    #  filename = os.path.basename(model_path)
-    #  userdir = os.getcwd()
-
-    #  print(stderr)
-
     if "pan: wrote" in out: # we know we wrote a trail
         print("attack trace found!!!! printing!\n")
         cd = os.getcwd()
@@ -139,7 +141,7 @@ def eval_model(model_path : str) -> None:
         # Convert bytes to string
         stdout = stdout.decode()
         stderr = stderr.decode()
-        
+
         print(stdout)
     else:
         print()
