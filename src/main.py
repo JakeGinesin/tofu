@@ -1,6 +1,5 @@
 # ==============================================================================
-# Author    : Jake Ginesin
-# Authored  : 14 June 2024
+# Author    : [redacted]
 # Purpose   : synthesize attacker gadgets for attackers that can drop, 
 #             replay, and reorder messages on a channel
 # ==============================================================================

@@ -1,0 +1,9 @@
+unidirectional-drop-abp: 
+  - command: python src/main.py --model=tests/abp/abp.pml --attacker=drop --chan=AtoB --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: abp resists drop, see https://en.wikipedia.org/wiki/Alternating_bit_protocol
+
+bidirectional-drop-abp: 
+  - command: python src/main.py --model=tests/abp/abp.pml --attacker=drop --chan=AtoB,BtoA --output=temp.pml --eval --cleanup --mem=1
+  - intended: no violation
+  - explanation: abp resists drop, see https://en.wikipedia.org/wiki/Alternating_bit_protocol
