@@ -16,4 +16,5 @@ A full tutorial is available in [TUTORIAL.MD](TUTORIAL.md)
 
 ## Why Tofu?
 Named after the following cat, which was in-turn named after the food:
+
 ![Tofu](tofu.png)
