@@ -12,4 +12,4 @@ $ test_harness tests/tests.yaml # general correctness tests
 ```
 Each test comes with a description - check out the respective YAML files
 
-A full tutorial is available in [TUTORIAL.MD](TUTORIAL.MD)
+A full tutorial is available in [TUTORIAL.MD](TUTORIAL.md)
