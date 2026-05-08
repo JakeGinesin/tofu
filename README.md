@@ -1,4 +1,9 @@
 # Automated Channel Fault Analysis with Tofu
+Tofu is a tool for automatically discovering channel faults on distributed protocols. Tofu
+supports the efficient, automated discovery of message dropping, replaying, and reordering channel faults on arbitrary victim protocol designs.
+
+The paper presenting the underpinning theoretical foundation of Tofu is available on arXiv, 
+["Automated Channel Fault Analysis with Tofu"](https://arxiv.org/pdf/2605.01721).
 
 ## Installation and Tests
 - Install nix
